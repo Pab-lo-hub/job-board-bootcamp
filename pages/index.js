@@ -1,15 +1,40 @@
-import Head from 'next/head'
+import Jobs from 'components/Jobs'
+import prisma from 'lib/prisma'
+import { getJobs } from 'lib/data.js'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/router'
 
-export default function Home() {
+export default function Home({ jobs }) {
+  const router = useRouter()
+  if (session && !session.user.name) {
+    router.push('/setup')
+  }
+  const { data: session, status } = useSession()
+  {
+    !session && (
+      <a className='border px-8 py-2 mt-5 font-bold rounded-full bg-black text-white border-black '
+        href='/api/auth/signin'>
+        login
+      </a>
+    )
+  }
   return (
-    <div>
-      <Head>
-        <title></title>
-        <meta name='description' content='' />
-        <link rel='icon' href='/favicon.ico' />
-      </Head>
-
-      <h1>Welcome!</h1>
+    <div className='mt-10'>
+      <div className='text-center p-4 m-4'>
+        <h2 className='mb-10 text-4xl font-bold'>Find a job!</h2>
+      </div>
+      <Jobs jobs={jobs} />
     </div>
   )
+}
+
+export async function getServerSideProps(context) {
+  let jobs = await getJobs(prisma)
+  jobs = JSON.parse(JSON.stringify(jobs))
+
+  return {
+    props: {
+      jobs,
+    },
+  }
 }
